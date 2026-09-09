@@ -374,8 +374,6 @@ def docker_build(args):
 
     cache_tag = environ.get('LOCAL_REGISTRY_CACHE_TAG')
     if cache_tag:
-        call(['docker', 'pull', cache_tag])
-
         build_cmd += [
             '--build-arg',
             'BUILDKIT_INLINE_CACHE=1',
