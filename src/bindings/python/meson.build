@@ -38,40 +38,19 @@ else
     if python_with_aspn_cpp.found()
         aspn_xtensor_python_lib_location = ''
 
-        result = run_command(
-            [python_with_aspn_cpp, '-c', 'import aspn23_xtensor; import os; print(os.path.relpath(os.path.dirname(aspn23_xtensor.__file__)))'],
-            check: false)
-
-        aspn_install_dir_abs = run_command(
-            [python_with_aspn_cpp, '-c', 'import aspn23_xtensor; import os; print(os.path.dirname(aspn23_xtensor.__file__))'],
-            check: true).stdout().strip() / 'aspn23_xtensor'
-
-        if result.returncode() == 0
-            aspn_install_dir = result.stdout().strip() / 'aspn23_xtensor'
-        else
-            aspn_install_dir = aspn_install_dir_abs
-        endif
-
         # Get path to ASPN-C headers vendored by ASPN-C++ Python module
-        get_header_path = join_paths(meson.project_source_root(), 'util', 'get_aspn_xtensor_header_path.py')
-        aspn_include_dir = run_command([python, get_header_path], check: true).stdout().strip()
-
-        if aspn_include_dir == ''
-            # Must be an additional path that needs to be added to possible_header_paths.
-            error('Found ASPN-C++ installation, but could not locate the ASPN-C++ headers')
-        endif
+        get_aspn_xtensor_paths = join_paths(meson.project_source_root(), 'util', 'get_aspn_xtensor_paths.py')
+        aspn_xtensor_paths = run_command([python, get_aspn_xtensor_paths], check: true).stdout().split()
+        aspn_include_dir = aspn_xtensor_paths[0]
+        aspn_install_dir = aspn_xtensor_paths[1]
 
         # Find the library with platform-appropriate naming
         aspn_xtensor_py_lib = meson.get_compiler('cpp').find_library(
             'aspn_xtensor_py',
-            dirs: [aspn_install_dir_abs],
+            dirs: [aspn_install_dir],
             static: true,
             required: false
         )
-
-        if not aspn_xtensor_py_lib.found()
-            error('Could not find ASPN-C++ static library')
-        endif
 
         aspn_xtensor_py_dep = declare_dependency(
             include_directories: include_directories(aspn_include_dir),
