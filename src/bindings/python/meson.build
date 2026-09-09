@@ -52,24 +52,9 @@ else
             aspn_install_dir = aspn_install_dir_abs
         endif
 
-        # Get path to ASPN-C headers vendored by ASPN-C++ Python module by iterating over potential
-        # locations.
-        fs = import('fs')
-        possible_header_paths = [
-            aspn_install_dir.replace('lib', 'include/site').replace('site-packages/', ''),
-            aspn_install_dir.replace('lib', 'include/site/python' + python_with_aspn_cpp.language_version()).replace('site-packages/', ''),
-            aspn_install_dir.replace('lib', 'include').replace('site-packages/', ''),
-            aspn_install_dir.replace('lib', 'include').replace('site-packages/', '').replace('dist-packages/', '').replace('local/', ''),
-            aspn_install_dir.replace('Lib', 'include/site/python' + python_with_aspn_cpp.language_version()).replace('site-packages/', ''),
-        ]
-
-        aspn_include_dir = ''
-        foreach possible_path: possible_header_paths
-            if fs.is_dir(possible_path)
-                aspn_include_dir = possible_path
-                break
-            endif
-        endforeach
+        # Get path to ASPN-C headers vendored by ASPN-C++ Python module
+        get_header_path = join_paths(meson.project_source_root(), 'util', 'get_aspn_xtensor_header_path.py')
+        aspn_include_dir = run_command([python, get_header_path], check: true).stdout().strip()
 
         if aspn_include_dir == ''
             # Must be an additional path that needs to be added to possible_header_paths.
@@ -89,7 +74,7 @@ else
         endif
 
         aspn_xtensor_py_dep = declare_dependency(
-            include_directories: include_directories(aspn_install_dir, aspn_include_dir),
+            include_directories: include_directories(aspn_include_dir),
             dependencies: [aspn_xtensor_py_lib])
     endif
 endif
