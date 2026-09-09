@@ -39,14 +39,17 @@ RUN dnf install -y \
     python3-pip \
     sudo \
     texlive \
- && dnf clean all \
- && rm -rf /var/cache/yum
+    && dnf clean all \
+    && rm -rf /var/cache/yum
 
 RUN flexiblas default openblas-serial
 
-# Install pip packages, excluding any that were already installed by dnf
+# Create a venv and activate it
+RUN mkdir /venv && python3 -m venv /venv --system-site-packages
+
+# Install pip packages, excluding any that were already installed by apt
 COPY requirements.txt /
-RUN bash -c 'pip3 install -r <(grep -vf <(pip3 freeze | cut -d= -f1) /requirements.txt)'
+RUN bash -c '/venv/bin/pip install -r <(grep -vf <(pip3 freeze | cut -d= -f1) /requirements.txt)'
 
 WORKDIR /work
 
